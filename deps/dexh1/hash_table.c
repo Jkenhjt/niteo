@@ -1,6 +1,7 @@
 #include "hash_table.h"
 
-int dexh1_hash(int size, char* name, int length)
+
+__inline__ int dexh1_hash(int size, char* name, int length)
 {
   /* Fnv1a hash function
    * Used for calculation hash of field.
@@ -8,17 +9,25 @@ int dexh1_hash(int size, char* name, int length)
   
   unsigned long result = 0xCBF29CE484222325;
 
-  int i = 0;
-  for(i = 0; i < length; i++)
+  int i;
+  int number_chunks = length / 8;
+
+  for(i = 0; i < number_chunks; i += 8)
+  {
+    result ^= * (unsigned long *) &name[i];
+    result = result * 0x100000001B3;
+  }
+
+  for(; i < length; i++)
   {
     result ^= name[i];
     result = result * 0x100000001B3;
   }
-  
+
   return result % size;
 }
 
-dexh1_http_field dexh1_get_field(dexh1_hash_table_t* ht, char* name, int length)
+__inline__ dexh1_http_field dexh1_get_field(dexh1_hash_table_t* ht, char* name, int length)
 {
   /* Extraction field from hash table */
 
@@ -26,7 +35,7 @@ dexh1_http_field dexh1_get_field(dexh1_hash_table_t* ht, char* name, int length)
   return ht->values[idx];
 }
 
-void dexh1_insert_field(dexh1_hash_table_t* ht, dexh1_http_field value)
+__inline__ void dexh1_insert_field(dexh1_hash_table_t* ht, dexh1_http_field value)
 {
   /* Insertation field into hash table */
 
@@ -35,7 +44,7 @@ void dexh1_insert_field(dexh1_hash_table_t* ht, dexh1_http_field value)
   ht->values[idx] = value;
 }
 
-void dexh1_delete_field(dexh1_hash_table_t* ht, char* name, int length)
+__inline__ void dexh1_delete_field(dexh1_hash_table_t* ht, char* name, int length)
 {
   /* Deletion field from hash table.
    * Using zeroing for deletion. */

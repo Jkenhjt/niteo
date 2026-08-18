@@ -1,9 +1,6 @@
 #include "http.h"
 
-
-typedef unsigned long __attribute__((aligned(1))) uint64_t;
-
-int dexh1_idx_delim(uint64_t data, int delim)
+__inline__ int dexh1_idx_delim(unsigned long data, int delim)
 {
   /* Fast search char without simd.
    * Using ctzll (count trailing zeros long long) function for count
@@ -24,19 +21,19 @@ int dexh1_idx_delim(uint64_t data, int delim)
   return __builtin_ctzll(result) / 8;
 }
 
-int dexh1_length_field(char* buff, int length, char delim, int* idx, int* field_length)
+__inline__ int dexh1_length_field(char* buff, int length, char delim, int* idx, int* field_length)
 {
-  int result = dexh1_idx_delim(*(uint64_t *)(&buff[*idx]), delim);
+  int result = dexh1_idx_delim(*(unsigned long *)(&buff[*idx]), delim);
   for(; result == -1 && *field_length < length;
-	*idx += sizeof(uint64_t),
-	result = dexh1_idx_delim(*(uint64_t *)(&buff[*idx]), delim),
-	*field_length += sizeof(uint64_t))
+	*idx += sizeof(unsigned long),
+	result = dexh1_idx_delim(*(unsigned long *)(&buff[*idx]), delim),
+	*field_length += sizeof(unsigned long))
   {}
 
   return result;
 }
 
-void dexh1_method_request(dexh1_http* req, char* buff, int length)
+__inline__ void dexh1_method_request(dexh1_http* req, char* buff, int length)
 {
   char* method;
   int method_length = 0;
@@ -57,7 +54,7 @@ void dexh1_method_request(dexh1_http* req, char* buff, int length)
   result = dexh1_length_field(buff, length, ' ', &idx, &method_length);
 
   idx += result+1;
-  method_length += result+1;
+  method_length += result;
 
   /* Findg path. */
 
@@ -76,8 +73,8 @@ void dexh1_method_request(dexh1_http* req, char* buff, int length)
 
   result = dexh1_length_field(buff, length, '\r', &idx, &http_version_length);
   
-  idx += result+1;
-  http_version_length += result+1;
+  idx += result;
+  http_version_length += result;
  
   /* Inserting all previous parsed data into hash table. */
 
@@ -101,7 +98,7 @@ void dexh1_method_request(dexh1_http* req, char* buff, int length)
   dexh1_insert_field(&(req->ht), http_version_);
 }
 
-void dexh1_method_response(dexh1_http** req, char* buff, int length)
+__inline__ void dexh1_method_response(dexh1_http** req, char* buff, int length)
 {
   char* http_version;
   int http_version_length = 0;
@@ -122,7 +119,7 @@ void dexh1_method_response(dexh1_http** req, char* buff, int length)
   result = dexh1_length_field(buff, length, ' ', &idx, &http_version_length);
 
   idx += result+1;
-  http_version_length += result+1;
+  http_version_length += result;
 
   /* Finding status code. */
 
@@ -130,8 +127,8 @@ void dexh1_method_response(dexh1_http** req, char* buff, int length)
 
   result = dexh1_length_field(buff, length, ' ', &idx, &status_code_length);
 
-  idx += result+1;
-  status_code_length += result+1;
+  idx += result;
+  status_code_length += result;
   
   idx++;
 
@@ -141,8 +138,8 @@ void dexh1_method_response(dexh1_http** req, char* buff, int length)
 
   result = dexh1_length_field(buff, length, '\r', &idx, &status_message_length);
   
-  idx += result+1;
-  status_message_length += result+1;
+  idx += result;
+  status_message_length += result;
   
   /* Inserting all previous parsed data into hash table. */
   
@@ -168,31 +165,32 @@ void dexh1_method_response(dexh1_http** req, char* buff, int length)
 
 void dexh1_find_fields(int headers_length, dexh1_http* req, char* buff)
 {
+  char* field;
+  int field_length = 0;
+  char* value;
+  int value_length = 0;
+  dexh1_http_field field_;
+  
   int i = 0;
-  for(i = 0; i < headers_length; i++)
+  for(i = 0; i < headers_length;)
   {
-    char* field;
-    int field_length = 0;
-    char* value;
-    int value_length = 0;
-    dexh1_http_field field_;
-    
-    int result = dexh1_idx_delim(*((uint64_t *) &buff[i]), '\r');
+    int result = dexh1_idx_delim(*((unsigned long *) &buff[i]), '\r');
     if(result == -1)
     {
-      i += sizeof(uint64_t) - 1;
+      i += sizeof(unsigned long);
       continue;
     }
     
     i += result;
     
-    if(buff[i+2] == '\r' &&
-       buff[i+3] == '\n')
+    buff += 2;
+    
+    if(buff[i+1] == '\n')
     {
       char* value;
       int value_length;
 
-      value = buff+i+4;
+      value = buff+i+2;
 
       value_length = headers_length - i;
       
@@ -206,23 +204,52 @@ void dexh1_find_fields(int headers_length, dexh1_http* req, char* buff)
       break;
     }
 
-    field = buff+i+2;
 
-    for(; buff[i+2] != ':' && i < headers_length; i++, field_length++)
-    {}
+    field = buff+i;
+
+    field_length = i;
+
+    for(; i < headers_length ;)
+    {
+      result = dexh1_idx_delim(*((unsigned long *) &buff[i]), ':');
+      if(result != -1)
+      {
+        i += result;
+	break;
+      }
+      
+      i += sizeof(unsigned long);
+    }
+
+    field_length = i - field_length;
     
     i += 2;
+ 
 
-    value = buff+i+2;
+    value = buff+i;
 
-    for(; buff[i+2] != '\r' && i < headers_length; i++, value_length++)
-    {}
+    value_length = i;
+
+    for(; i < headers_length ;)
+    {
+      result = dexh1_idx_delim(*((unsigned long *) &buff[i]), '\r');
+      if(result != -1)
+      {
+        i += result;
+	break;
+      }
+      
+      i += sizeof(unsigned long);
+    }
+    
+    value_length = i - value_length;
+    
 
     field_.name = field;
     field_.name_length = field_length;
     field_.value = value;
     field_.value_length = value_length;
-
+    
     dexh1_insert_field(&req->ht, field_);
   }
 }

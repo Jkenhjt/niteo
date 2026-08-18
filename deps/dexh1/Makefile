@@ -11,7 +11,7 @@ PREFIX :=             /usr/local
 BUILD_LIB_PATH :=     build/lib
 BUILD_HEADERS_PATH := build/include
 
-CFLAGS +=             -O3 -s
+CFLAGS +=             -O3 -ffast-math
 SAFEFLAGS :=          -Wall -Werror -pedantic -std=iso9899:1990
 
 
