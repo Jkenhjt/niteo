@@ -7,7 +7,7 @@ extern "C" {
 
 #include <string.h>                                                                                           /* Used only for memset. Maybe removed in future. */
 
-#define DEXH1_HASH_TABLE_SIZE 100                                                                             /* Hash table size macros */
+#define DEXH1_HASH_TABLE_SIZE 1024                                                                             /* Hash table size macros */
 #define DEXH1_INIT_HASH_TABLE(x) memset(&x.values, 0, sizeof(dexh1_http_field) * DEXH1_HASH_TABLE_SIZE); \
                                  x.size = DEXH1_HASH_TABLE_SIZE;    /* Initialization hash table macros. */
 
