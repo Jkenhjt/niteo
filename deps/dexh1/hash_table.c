@@ -10,15 +10,8 @@ __inline__ int dexh1_hash(int size, char* name, int length)
   unsigned long result = 0xCBF29CE484222325;
 
   int i;
-  int number_chunks = length / 8;
 
-  for(i = 0; i < number_chunks; i += 8)
-  {
-    result ^= * (unsigned long *) &name[i];
-    result = result * 0x100000001B3;
-  }
-
-  for(; i < length; i++)
+  for(i = 0; i < length; i++)
   {
     result ^= name[i];
     result = result * 0x100000001B3;
