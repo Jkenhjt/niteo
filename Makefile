@@ -11,7 +11,7 @@ CFLAGS            += -O3 -s -ffast-math
 
 ARFLAGS            = rcs
 
-PREFIX            := /usr/local
+PREFIX            := /usr
 
 BUILD_DIR         := build
 BUILD_LIB_DIR     := ${BUILD_DIR}/lib
@@ -39,7 +39,7 @@ uninstall:
 	rm -rf ${PREFIX}/include/${LIBNAME}
 
 deps:
-	${MAKE} -C ${DEPENDENCIES_FOLDERS}
+	${MAKE} -C ${DEPENDENCIES_FOLDERS} install
 
 ${STATIC_LIB}: ${OBJS} ${BUILD_LIB_DIR}
 	${AR} ${ARFLAGS} ${BUILD_LIB_DIR}/$@ ${OBJS}

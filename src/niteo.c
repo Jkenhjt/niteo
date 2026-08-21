@@ -262,7 +262,7 @@ int niteo_response(dexh1_http* resp, int socket_accept, char* buff)
 
 int niteo_request_process(int socket_accept, dexh1_http* req, dexh1_http* resp, int mode)
 {
-  char buff[102400+1];
+  char buff[102400];
 
   if(mode == 0)
   {
@@ -411,8 +411,8 @@ int niteo_Start_server(void* is_async)
 
   memset(events, 0, sizeof(struct epoll_event) * NITEO_EVENTS_NUMBER);
   
-  dexh1_http req[NITEO_EVENTS_NUMBER];
-  dexh1_http resp[NITEO_EVENTS_NUMBER];
+  dexh1_http* req = (dexh1_http*) malloc(NITEO_EVENTS_NUMBER * sizeof(dexh1_http));
+  dexh1_http* resp = (dexh1_http*) malloc(NITEO_EVENTS_NUMBER * sizeof(dexh1_http));
 
   for(int i = 0; i < NITEO_EVENTS_NUMBER; i++)
   {
@@ -504,6 +504,9 @@ int niteo_Start_server(void* is_async)
       }
     }
   }
+  free(req);
+  free(resp);
+  
   close(socket_server);
   close(epollfd);
   return 0;
@@ -517,6 +520,7 @@ void niteo_server_launcher(int threads, int is_async)
   }
 
   puts("Listen 8000 port...");
+  signal(SIGINT, niteo_stop_loop);
 
   thrd_t t[threads];
   for(int i = 0; i < threads; i++)
@@ -532,7 +536,6 @@ void niteo_server_launcher(int threads, int is_async)
   
   //niteo_Start_server((void*) 1);
   
-  signal(SIGINT, niteo_stop_loop);
   
   for(;niteo_server_loop == 1;)
   {

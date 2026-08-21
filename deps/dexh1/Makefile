@@ -6,7 +6,7 @@ SRC :=                $(wildcard *.c)
 SRC_HEADERS :=        $(wildcard *.h)
 OBJS :=               $(patsubst %.c, %.o, ${SRC})
 
-PREFIX :=             /usr/local
+PREFIX :=             /usr
 
 BUILD_LIB_PATH :=     build/lib
 BUILD_HEADERS_PATH := build/include

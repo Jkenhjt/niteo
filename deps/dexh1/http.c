@@ -171,17 +171,29 @@ void dexh1_find_fields(int headers_length, dexh1_http* req, char* buff)
   int value_length = 0;
   dexh1_http_field field_;
   
+  int result = 0;
   int i = 0;
   for(i = 0; i < headers_length;)
   {
-    int result = dexh1_idx_delim(*((unsigned long *) &buff[i]), '\r');
-    if(result == -1)
+    if(headers_length - i > 8)
     {
-      i += sizeof(unsigned long);
-      continue;
+      result = dexh1_idx_delim(*((unsigned long *) &buff[i]), '\r');
+      if(result == -1)
+      {
+        i += sizeof(unsigned long);
+        continue;
+      }
+      i += result;
     }
-    
-    i += result;
+    else
+    {
+      if(buff[i] != '\r')
+      {
+        i++;
+	continue;
+      }
+    }
+
     
     buff += 2;
     

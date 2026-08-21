@@ -9,10 +9,10 @@ A high-performance, **standalone** HTTP server library written in **Pure C**.
 | Feature | Description |
 | :------ | :---------- |
 | **Language** | C (C11 compliant) |
-| **Performance:** | 200k+ RPS / 20k connections |
+| **Performance:** | 180k+ RPS / 20k connections |
 | **Pure C Architecture:** | Written in standard C with **zero external dependencies**. |
 | **Static Library Size:** | **~530kb** |
-| **RAM Usage:** | For 20k connections, it used only **~100kb** of RAM **(only stack)**. |
+| **RAM Usage:** | **~48mb** of RAM per thread. |
 | **Http parser:**| I created **libdexh1**, which uses a hash table to save HTTP fields (https://github.com/libdexh1) |
 
 ---
