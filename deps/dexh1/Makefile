@@ -11,8 +11,8 @@ PREFIX :=             /usr
 BUILD_LIB_PATH :=     build/lib
 BUILD_HEADERS_PATH := build/include
 
-CFLAGS +=             -O3 -ffast-math
-SAFEFLAGS :=          -Wall -Werror -pedantic -std=iso9899:1990
+CFLAGS +=             -ffast-math
+SAFEFLAGS :=          -Wall -Werror -pedantic -std=iso9899:1990 -fsanitize=address -O0 -g
 
 
 all: ${STATIC_LIB} ${SHARED_LIB} ${SRC_HEADERS}
